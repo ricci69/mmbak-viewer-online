@@ -1,0 +1,5 @@
+/vendor/
+/nbproject/
+/node_modules/
+/lib/smarty/templates_c/
+composer.lock

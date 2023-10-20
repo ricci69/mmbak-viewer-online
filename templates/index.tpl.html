@@ -112,7 +112,7 @@
                     <tbody>
                         {foreach from=$transactions item=transaction}
                         <tr>
-                            <td>{$transaction.WDATE}</td>
+                            <td>{$transaction.WDATE|date_format:"%d/%m/%Y"}</td>
                             <td>{if $transaction.DO_TYPE}-{else}+{/if}{$transaction.AMOUNT_ACCOUNT|number_format:2:",":"."} {$currencies[$transaction["currencyUid"]]}</td>
                             <td>{$transaction.NAME}</td>
                             <td>{$transaction.ZCONTENT}</td>
