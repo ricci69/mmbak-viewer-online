@@ -1,0 +1,19 @@
+{
+    "name": "ricci69/mmbak-viewer-online",
+    "type": "library",
+    "description": "Navigate with a browser through a mmbak file backup",
+    "version": "1.0",
+    "minimum-stability": "stable",    
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "ricci69",
+            "email": "ricci69@protonmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.0",
+        "smarty/smarty": "*",
+        "ricci69/mmbak-viewer": "*"
+    }
+}
