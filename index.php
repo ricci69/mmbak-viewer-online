@@ -2,12 +2,6 @@
 require 'vendor/autoload.php';
 include "lib/smarty.inc.php";
 
-$Db = new Ricci69\MmbakViewer\DbDriver();
-$Currencies = new Ricci69\MmbakViewer\Currencies($Db);
-$Inoutcome = new Ricci69\MmbakViewer\Inoutcome($Db);
-$Categories = new Ricci69\MmbakViewer\Categories($Db);
-$Wallet = new Ricci69\MmbakViewer\Wallet($Db); 
-
 if (!isset($_GET["start"]) || !isset($_GET["end"]))
 {
     $start = date("Y-m-d", strtotime("first day of this month"));
@@ -33,21 +27,53 @@ $smarty->assign("end_next_month", $end_next_month);
 $smarty->assign("start_previous_month", $start_previous_month);
 $smarty->assign("end_previous_month", $end_previous_month);
 
-$currencies = $Currencies->get();
-$smarty->assign("currencies", $currencies); 
+// File upload
+if (isset($_FILES["fileupload"]))
+{
+    move_uploaded_file($_FILES["fileupload"]["tmp_name"], "db.mmbak");
+}
 
-$transactions = $Inoutcome->getFull($start, $end);
-$smarty->assign("transactions", $transactions);
+// Google drive upload
+if (isset($_POST["gdriveurl"]))
+{
+    preg_match_all('/\/d\/(.*)\//m', $_POST["gdriveurl"], $matches, PREG_SET_ORDER, 0);
+    file_put_contents("db.mmbak", file_get_contents("https://drive.google.com/uc?export=download&id=".$matches[0][1]));
+}
 
-$sumIn = $Inoutcome->getSumIn($start, $end);
-if (is_null($sumIn["sum"])) $sumIn = array("sum"=>0, "currency"=>key($currencies));
-$smarty->assign("sumIn", $sumIn);
+// DB read
+if (file_exists("db.mmbak"))
+{
+    $Db = new Ricci69\MmbakViewer\DbDriver();
+    $Currencies = new Ricci69\MmbakViewer\Currencies($Db);
+    $Inoutcome = new Ricci69\MmbakViewer\Inoutcome($Db);
+    $Categories = new Ricci69\MmbakViewer\Categories($Db);
+    $Wallet = new Ricci69\MmbakViewer\Wallet($Db); 
 
-$sumOut = $Inoutcome->getSumOut($start, $end);
-if (is_null($sumOut["sum"])) $sumOut = array("sum"=>0, "currency"=>key($currencies));
-$smarty->assign("sumOut", $sumOut);
+    $currencies = $Currencies->get();
+    $smarty->assign("currencies", $currencies); 
 
-$balance = $Wallet->getBalance();
-$smarty->assign("balance", $balance);
+    $transactions = $Inoutcome->getFull($start, $end);
+    $smarty->assign("transactions", $transactions);
 
+    $sumIn = $Inoutcome->getSumIn($start, $end);
+    if (is_null($sumIn["sum"])) $sumIn = array("sum"=>0, "currency"=>key($currencies));
+    $smarty->assign("sumIn", $sumIn);
+
+    $sumOut = $Inoutcome->getSumOut($start, $end);
+    if (is_null($sumOut["sum"])) $sumOut = array("sum"=>0, "currency"=>key($currencies));
+    $smarty->assign("sumOut", $sumOut);
+
+    $balance = $Wallet->getBalance();
+    $smarty->assign("balance", $balance);
+}
+else
+{
+    $smarty->assign("fileNotFound", 1);
+    $smarty->assign("currencies", array(""=>""));
+    $smarty->assign("transactions", array());
+    $smarty->assign("sumIn", array("sum"=>0, "currency"=>""));
+    $smarty->assign("sumOut", array("sum"=>0, "currency"=>""));
+    $smarty->assign("balance", array("balance"=>0, "currency"=>""));
+}
+    
 $smarty->display('index.tpl.html');
