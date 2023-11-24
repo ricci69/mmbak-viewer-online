@@ -15,10 +15,11 @@ else
 {
     $start = $_GET["start"];
     $end = $_GET["end"];
-    $start_next_month = date("Y-m-01", strtotime("{$end} +1 month"));
-    $end_next_month = date("Y-m-t", strtotime("{$end} +1 month"));
-    $start_previous_month = date("Y-m-01", strtotime("{$start} -1 month"));
-    $end_previous_month = date("Y-m-t", strtotime("{$start} -1 month"));
+    $endlt = strtotime($end);
+    $start_next_month = date("Y-m-01", strtotime(date("Y-m", $endlt)." +1 month"));
+    $end_next_month = date("Y-m-t", strtotime(date("Y-m", $endlt)." +1 month"));
+    $start_previous_month = date("Y-m-01", strtotime(date("Y-m", $endlt)." -1 month"));
+    $end_previous_month = date("Y-m-t", strtotime(date("Y-m", $endlt)." -1 month"));
 }
 $smarty->assign("start", $start);
 $smarty->assign("end", $end);
@@ -55,6 +56,16 @@ if (file_exists("db.mmbak"))
     $transactions = $Inoutcome->getFull($start, $end);
     $smarty->assign("transactions", $transactions);
 
+    $expendituresGrouped = array();
+    foreach ($transactions as $transaction)
+        if ($transaction["DO_TYPE"]==1)
+            if (!isset($expendituresGrouped[$transaction["NAME"]]))
+                $expendituresGrouped[$transaction["NAME"]] = $transaction["AMOUNT_ACCOUNT"];
+            else
+                $expendituresGrouped[$transaction["NAME"]] += $transaction["AMOUNT_ACCOUNT"];
+    arsort($expendituresGrouped, SORT_NUMERIC);        
+    $smarty->assign("expendituresGrouped", $expendituresGrouped);        
+            
     $sumIn = $Inoutcome->getSumIn($start, $end);
     if (is_null($sumIn["sum"])) $sumIn = array("sum"=>0, "currency"=>key($currencies));
     $smarty->assign("sumIn", $sumIn);
